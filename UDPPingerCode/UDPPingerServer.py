@@ -2,7 +2,7 @@
 
 # We will need the following module to generate randomized lost packets import
 # random
-import random
+import random, sys
 from socket import *
 
 # Create a UDP socket
@@ -23,3 +23,6 @@ while True:
         continue
     # Otherwise, the server responds
     serverSocket.sendto(message, address)
+
+serverSocket.close()
+sys.exit()
