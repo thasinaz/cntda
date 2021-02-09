@@ -1,6 +1,3 @@
-#!/usr/bin/env python3
-
-#import socket module
 from socket import *
 import threading
 
