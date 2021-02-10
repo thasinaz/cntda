@@ -63,7 +63,7 @@ if recv0[:3] != '220':
     print('220 reply not received from server.')
 
 context = ssl.create_default_context()
-ssocket = context.wrap_socket(clientSocket, server_hostname='smtp.office365.com')
+ssocket = context.wrap_socket(clientSocket, server_hostname=serverHost)
 
 # Send EHLO command and print server response.
 ehloCommand = 'EHLO Alice\r\n'
