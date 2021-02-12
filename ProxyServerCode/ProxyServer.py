@@ -10,7 +10,7 @@ if len(sys.argv) <= 1:
 
 # Create a server socket, bind it to a port and start listening
 tcpSerSock = socket(AF_INET, SOCK_STREAM)
-tcpSerSock.bind((sys.argv[1], 8889))
+tcpSerSock.bind((sys.argv[1], 8888))
 tcpSerSock.listen(1)
 while 1:
     # Start receiving data from the client
