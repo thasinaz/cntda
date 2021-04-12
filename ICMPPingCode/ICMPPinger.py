@@ -10,6 +10,19 @@ import binascii
 
 ICMP_ECHO_REQUEST = 8
 
+rtt_min = float("inf")
+rtt_max = 0
+rtt_avg = 0
+sended = 0
+recved = 0
+
+error = ["destination network unreachable",
+         "destination host unreachable",
+         "estination protocol unreachable",
+         "estination port unreachable",
+         "estination network unknown",
+         "estination host unknown"] 
+
 def checksum(bytes):
     csum = 0
     countTo = (len(bytes) // 2) * 2
@@ -32,6 +45,10 @@ def checksum(bytes):
     return answer
 
 def receiveOnePing(mySocket, ID, timeout, destAddr):
+    global rtt_min
+    global rtt_max
+    global rtt_avg
+    global recved
     timeLeft = timeout
 
     while 1:
@@ -45,13 +62,25 @@ def receiveOnePing(mySocket, ID, timeout, destAddr):
         recPacket, addr = mySocket.recvfrom(1024)
 
         # Fetch the ICMP header from the IP packet
-        print(recPacket[20:28])
+        header = recPacket[20:28]
+        if header[0] == 0 and header[1] == 0:
+            if ID == int.from_bytes(header[4:6], byteorder = "little"):
+                thisTime = (timeReceived - startedSelect) * 1000
+                rtt_min = min(rtt_min, thisTime)
+                rtt_max = max(rtt_max, thisTime)
+                rtt_avg = (rtt_avg * recved + thisTime) / (recved + 1)
+                recved = recved + 1
+                return round(thisTime, 1)
+
+        if header[0] == 3:
+            return error[header[1]]
 
         timeLeft = timeLeft - howLongInSelect
         if timeLeft <= 0:
             return "Request timed out."
 
 def sendOnePing(mySocket, destAddr, ID):
+    global sended
     # Header is type (8), code (8), checksum (16), id (16), sequence (16)
 
     myChecksum = 0
@@ -74,6 +103,7 @@ def sendOnePing(mySocket, destAddr, ID):
     packet = header + data
 
     mySocket.sendto(packet, (destAddr, 1)) # AF_INET address must be tuple, not str
+    sended = sended + 1
     # Both LISTS and TUPLES consist of a number of objects
     # which can be referenced by their position number within the object.
 
@@ -97,10 +127,15 @@ def ping(host, timeout=1):
     print("Pinging " + dest + " using Python:")
     print("")
     # Send ping requests to a server separated by approximately one second
-    while 1 :
+    for i in range(4) :
         delay = doOnePing(dest, timeout)
         print(delay)
         time.sleep(1) # one second
+    if recved != 0:
+        print("min RTT:", rtt_min)
+        print("max RTT:", rtt_max)
+        print("avg RTT:", rtt_avg)
+    print("loss rate: {:.2%}".format((sended - recved) / sended))
     return delay
 
-ping("baidu.com")
+ping("google.com")
